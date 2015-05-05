@@ -59,6 +59,8 @@ df.file(__dirname, function (err, data) {
 
 ### df(callback)
 
+Get a list of filesystems with space info.
+
 #### callback(error, list)
 
 *Required*  
