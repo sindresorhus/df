@@ -15,6 +15,9 @@
   "scripts": {
     "test": "node test.js"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "files": [
     "index.js"
   ],
