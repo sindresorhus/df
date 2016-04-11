@@ -10,7 +10,7 @@
     "url": "sindresorhus.com"
   },
   "engines": {
-    "node": ">=0.10.0"
+    "node": ">=4"
   },
   "scripts": {
     "test": "node test.js"
@@ -38,6 +38,9 @@
     "size",
     "capacity"
   ],
+  "dependencies": {
+    "execa": "^0.2.2"
+  },
   "devDependencies": {
     "ava": "0.0.4"
   }

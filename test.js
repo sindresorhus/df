@@ -3,10 +3,9 @@ var test = require('ava');
 var df = require('./');
 
 test('df()', function (t) {
-	t.plan(4);
+	t.plan(3);
 
-	df(function (err, data) {
-		t.assert(!err, err);
+	df().then(function (data) {
 		t.assert(Array.isArray(data));
 		t.assert(data[0].filesystem.length > 0);
 		t.assert(data[0].mountpoint[0] === '/');
@@ -14,24 +13,22 @@ test('df()', function (t) {
 });
 
 test('df.fs()', function (t) {
-	t.plan(4);
+	t.plan(2);
 
-	df(function (err, data) {
-		t.assert(!err, err);
-
-		df.fs(data[0].filesystem, function (err, data) {
-			t.assert(!err, err);
+	df()
+		.then(function (data) {
+			return df.fs(data[0].filesystem);
+		})
+		.then(function (data) {
 			t.assert(data.filesystem.length > 0);
 			t.assert(data.mountpoint[0] === '/');
 		});
-	});
 });
 
 test('df.file()', function (t) {
-	t.plan(3);
+	t.plan(2);
 
-	df.file(__dirname, function (err, data) {
-		t.assert(!err, err);
+	df.file(__dirname).then(function (data) {
 		t.assert(data.filesystem.length > 0);
 		t.assert(data.mountpoint[0] === '/');
 	});

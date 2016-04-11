@@ -17,9 +17,9 @@ $ npm install --save @sindresorhus/df
 ## Usage
 
 ```js
-var df = require('@sindresorhus/df');
+const df = require('@sindresorhus/df');
 
-df(function (err, list) {
+df().then(list => {
 	console.log(list);
 	/*
 	[{
@@ -29,68 +29,41 @@ df(function (err, list) {
 		available: 55562420224,
 		capacity: 0.89,
 		mountpoint: '/'
- 	 }, ...]
-  */
+	}, ...]
+	*/
 });
 
-df.fs('/dev/disk1', function (err, data) {
+df.fs('/dev/disk1').then(data => {
 	console.log(data);
 	/*
 	{
 		filesystem: '/dev/disk1',
 		...
- 	 }
-  */
+	}
+	*/
 });
 
-df.file(__dirname, function (err, data) {
+df.file(__dirname).then(data => {
 	console.log(data);
 	/*
 	{
 		filesystem: '/dev/disk1',
 		...
- 	 }
-  */
+	}
+	*/
 });
 ```
 
 
 ## API
 
-### df(callback)
+### df()
 
-Get a list of filesystems with space info.
+Returns a promise for an array of filesystems with space info.
 
-#### callback(error, list)
+### df.fs(filesystem)
 
-*Required*  
-Type: `function`
-
-##### list
-
-Type: `array`
-
-List of `data` objects.
-
-### df.fs(filesystem, callback)
-
-Get space info for a specific filesystem.
-
-#### filesystem
-
-*Required*  
-Type: `string`
-
-#### callback(error, data)
-
-*Required*  
-Type: `function`
-
-##### data
-
-Type: `object`
-
-Data for the specified filesystem:
+Returns a promise for an object with the space info for the specified filesystem.
 
 - `filesystem` - The name of the filesystem.
 - `size` - Total size in bytes.
@@ -99,23 +72,19 @@ Data for the specified filesystem:
 - `capacity` - Capacity as a float from `0` to `1`.
 - `mountpoint` - Disk mount location.
 
-### df.file(file, callback)
+#### filesystem
 
-Get space info for the filesystem the supplied file is part of.
+*Required*  
+Type: `string`
+
+### df.file(file)
+
+Returns a promise for an object with the space info for the filesystem the supplied file is part of.
 
 #### file
 
 *Required*  
 Type: `string`
-
-#### callback(error, data)
-
-*Required*  
-Type: `function`
-
-##### data
-
-Same as `df.fs()`.
 
 
 ## License
