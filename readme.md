@@ -74,7 +74,6 @@ Returns a promise for an object with the space info for the specified filesystem
 
 #### filesystem
 
-*Required*  
 Type: `string`
 
 ### df.file(file)
@@ -83,10 +82,9 @@ Returns a promise for an object with the space info for the filesystem the suppl
 
 #### file
 
-*Required*  
 Type: `string`
 
 
 ## License
 
-MIT © [Sindre Sorhus](http://sindresorhus.com)
+MIT © [Sindre Sorhus](https://sindresorhus.com)

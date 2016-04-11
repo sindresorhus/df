@@ -1,22 +1,22 @@
 import test from 'ava';
-import fn from './';
+import m from './';
 
 test('df()', async t => {
-	const data = await fn();
+	const data = await m();
 	t.true(Array.isArray(data));
-	t.truthy(data[0].filesystem.length);
+	t.true(data[0].filesystem.length > 0);
 	t.is(data[0].mountpoint[0], '/');
 });
 
 test('df.fs()', async t => {
-	const data = await fn();
-	const dataFs = await fn.fs(data[0].filesystem);
-	t.truthy(dataFs.filesystem.length);
+	const data = await m();
+	const dataFs = await m.fs(data[0].filesystem);
+	t.true(dataFs.filesystem.length > 0);
 	t.is(dataFs.mountpoint[0], '/');
 });
 
 test('df.file()', async t => {
-	const data = await fn.file(__dirname);
-	t.truthy(data.filesystem.length);
+	const data = await m.file(__dirname);
+	t.true(data.filesystem.length > 0);
 	t.is(data.mountpoint[0], '/');
 });

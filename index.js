@@ -1,8 +1,8 @@
 'use strict';
 const execa = require('execa');
 
-const run = args => {
-	return execa('df', args).then(res => res.stdout.trim().split('\n').slice(1).map(x => {
+const run = args => execa('df', args).then(res =>
+	res.stdout.trim().split('\n').slice(1).map(x => {
 		const cl = x.split(/\s+(?=[\d\/])/);
 
 		return {
@@ -13,8 +13,8 @@ const run = args => {
 			capacity: parseInt(cl[4], 10) / 100,
 			mountpoint: cl[5]
 		};
-	}));
-};
+	})
+);
 
 const df = module.exports = () => run(['-kP']);
 
@@ -24,15 +24,11 @@ df.fs = name => {
 	}
 
 	return run(['-kP']).then(data => {
-		let ret;
-
-		data.forEach(x => {
+		for (const x of data) {
 			if (x.filesystem === name) {
-				ret = x;
+				return x;
 			}
-		});
-
-		return ret;
+		}
 	});
 };
 
