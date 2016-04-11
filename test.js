@@ -1,38 +1,22 @@
-'use strict';
-var test = require('ava');
-var df = require('./');
+import test from 'ava';
+import fn from './';
 
-test('df()', function (t) {
-	t.plan(4);
-
-	df(function (err, data) {
-		t.assert(!err, err);
-		t.assert(Array.isArray(data));
-		t.assert(data[0].filesystem.length > 0);
-		t.assert(data[0].mountpoint[0] === '/');
-	});
+test('df()', async t => {
+	const data = await fn();
+	t.true(Array.isArray(data));
+	t.truthy(data[0].filesystem.length);
+	t.is(data[0].mountpoint[0], '/');
 });
 
-test('df.fs()', function (t) {
-	t.plan(4);
-
-	df(function (err, data) {
-		t.assert(!err, err);
-
-		df.fs(data[0].filesystem, function (err, data) {
-			t.assert(!err, err);
-			t.assert(data.filesystem.length > 0);
-			t.assert(data.mountpoint[0] === '/');
-		});
-	});
+test('df.fs()', async t => {
+	const data = await fn();
+	const dataFs = await fn.fs(data[0].filesystem);
+	t.truthy(dataFs.filesystem.length);
+	t.is(dataFs.mountpoint[0], '/');
 });
 
-test('df.file()', function (t) {
-	t.plan(3);
-
-	df.file(__dirname, function (err, data) {
-		t.assert(!err, err);
-		t.assert(data.filesystem.length > 0);
-		t.assert(data.mountpoint[0] === '/');
-	});
+test('df.file()', async t => {
+	const data = await fn.file(__dirname);
+	t.truthy(data.filesystem.length);
+	t.is(data.mountpoint[0], '/');
 });
