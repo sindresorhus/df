@@ -13,7 +13,7 @@
     "node": ">=4"
   },
   "scripts": {
-    "test": "node test.js"
+    "test": "ava"
   },
   "publishConfig": {
     "access": "public"
@@ -42,6 +42,6 @@
     "execa": "^0.2.2"
   },
   "devDependencies": {
-    "ava": "0.0.4"
+    "ava": "*"
   }
 }
