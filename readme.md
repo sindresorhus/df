@@ -2,7 +2,7 @@
 
 > Get free disk space info from [`df -kP`](http://en.wikipedia.org/wiki/Df_\(Unix\))
 
-Works on any Unix based system like OS X and Linux.
+Works on any Unix based system like macOS and Linux.
 
 *Created because all the other `df` wrappers are terrible. This one uses simple and explicit parsing. Uses `execFile` rather than `exec`. Ensures better platform portability by using the `-P` flag. Returns sizes in bytes instead of kilobytes and the capacity as a float.*
 
