@@ -1,4 +1,5 @@
 'use strict';
+const FS = require('fs');
 const execa = require('execa');
 
 const run = args => execa('df', args).then(res =>
@@ -28,6 +29,7 @@ df.fs = name => {
 			if (x.filesystem === name) {
 				return x;
 			}
+			return Promise.reject(new Error('required valid name'));
 		}
 	});
 };
@@ -35,6 +37,10 @@ df.fs = name => {
 df.file = file => {
 	if (typeof file !== 'string') {
 		return Promise.reject(new Error('file required'));
+	}
+
+	if (!FS.existsSync(file)) {
+		return Promise.reject(new Error('required valid file'));
 	}
 
 	return run(['-kP', file]).then(data => data[0]);
