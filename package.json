@@ -1,6 +1,6 @@
 {
   "name": "@sindresorhus/df",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "description": "Get free disk space info from `df -kP`",
   "license": "MIT",
   "repository": "sindresorhus/df",
