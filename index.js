@@ -29,6 +29,8 @@ df.fs = name => {
 				return x;
 			}
 		}
+
+		throw new Error(`The specified filesystem \`${name}\` doesn't exist`);
 	});
 };
 
@@ -37,5 +39,13 @@ df.file = file => {
 		return Promise.reject(new Error('file required'));
 	}
 
-	return run(['-kP', file]).then(data => data[0]);
+	return run(['-kP', file])
+		.then(data => data[0])
+		.catch(err => {
+			if (/No such file or directory/.test(err.message)) {
+				err = new Error(`The specified file \`${file}\` doesn't exist`);
+			}
+
+			throw err;
+		});
 };
