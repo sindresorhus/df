@@ -2,7 +2,7 @@
 
 > Get free disk space info from [`df -kP`](http://en.wikipedia.org/wiki/Df_\(Unix\))
 
-Works on any Unix based system like macOS and Linux.
+Works on any Unix-based system like macOS and Linux.
 
 *Created because all the other `df` wrappers are terrible. This one uses simple and explicit parsing. Uses `execFile` rather than `exec`. Ensures better platform portability by using the `-P` flag. Returns sizes in bytes instead of kilobytes and the capacity as a float.*
 
@@ -10,7 +10,7 @@ Works on any Unix based system like macOS and Linux.
 ## Install
 
 ```
-$ npm install --save @sindresorhus/df
+$ npm install @sindresorhus/df
 ```
 
 
@@ -19,8 +19,8 @@ $ npm install --save @sindresorhus/df
 ```js
 const df = require('@sindresorhus/df');
 
-df().then(list => {
-	console.log(list);
+(async () => {
+	console.log(await df());
 	/*
 	[{
 		filesystem: '/dev/disk1',
@@ -29,29 +29,25 @@ df().then(list => {
 		available: 55562420224,
 		capacity: 0.89,
 		mountpoint: '/'
-	}, ...]
+	}, …]
 	*/
-});
 
-df.fs('/dev/disk1').then(data => {
-	console.log(data);
+	console.log(await df.fs('/dev/disk1'));
 	/*
 	{
 		filesystem: '/dev/disk1',
-		...
+		…
 	}
 	*/
-});
 
-df.file(__dirname).then(data => {
-	console.log(data);
+	console.log(await df.file(__dirname));
 	/*
 	{
 		filesystem: '/dev/disk1',
-		...
+		…
 	}
 	*/
-});
+})();
 ```
 
 
@@ -59,11 +55,11 @@ df.file(__dirname).then(data => {
 
 ### df()
 
-Returns a promise for an array of filesystems with space info.
+Returns a `Promise<Array>` with a list of filesystems with space info.
 
 ### df.fs(filesystem)
 
-Returns a promise for an object with the space info for the specified filesystem.
+Returns a `Promise<Object>` with the space info for the specified filesystem.
 
 - `filesystem` - The name of the filesystem.
 - `size` - Total size in bytes.
@@ -78,7 +74,7 @@ Type: `string`
 
 ### df.file(file)
 
-Returns a promise for an object with the space info for the filesystem the supplied file is part of.
+Returns a `Promise<Object>` with the space info for the filesystem the supplied file is part of.
 
 #### file
 

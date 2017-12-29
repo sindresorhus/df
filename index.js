@@ -3,7 +3,7 @@ const execa = require('execa');
 
 const run = args => execa('df', args).then(res =>
 	res.stdout.trim().split('\n').slice(1).map(x => {
-		const cl = x.split(/\s+(?=[\d\/])/);
+		const cl = x.split(/\s+(?=[\d/])/);
 
 		return {
 			filesystem: cl[0],
@@ -16,7 +16,7 @@ const run = args => execa('df', args).then(res =>
 	})
 );
 
-const df = module.exports = () => run(['-kP']);
+const df = () => run(['-kP']);
 
 df.fs = name => {
 	if (typeof name !== 'string') {
@@ -49,3 +49,5 @@ df.file = file => {
 			throw err;
 		});
 };
+
+module.exports = df;

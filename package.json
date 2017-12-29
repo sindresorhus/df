@@ -1,51 +1,48 @@
 {
-  "name": "@sindresorhus/df",
-  "version": "2.1.0",
-  "description": "Get free disk space info from `df -kP`",
-  "license": "MIT",
-  "repository": "sindresorhus/df",
-  "author": {
-    "name": "Sindre Sorhus",
-    "email": "sindresorhus@gmail.com",
-    "url": "sindresorhus.com"
-  },
-  "engines": {
-    "node": ">=4"
-  },
-  "scripts": {
-    "test": "xo && ava"
-  },
-  "publishConfig": {
-    "access": "public"
-  },
-  "files": [
-    "index.js"
-  ],
-  "keywords": [
-    "df",
-    "dfkp",
-    "df-kp",
-    "disk",
-    "space",
-    "free",
-    "info",
-    "data",
-    "fs",
-    "filesystem",
-    "file-system",
-    "drive",
-    "mount",
-    "size",
-    "capacity"
-  ],
-  "dependencies": {
-    "execa": "^0.2.2"
-  },
-  "devDependencies": {
-    "ava": "*",
-    "xo": "*"
-  },
-  "xo": {
-    "esnext": true
-  }
+	"name": "@sindresorhus/df",
+	"version": "2.1.0",
+	"description": "Get free disk space info from `df -kP`",
+	"license": "MIT",
+	"repository": "sindresorhus/df",
+	"author": {
+		"name": "Sindre Sorhus",
+		"email": "sindresorhus@gmail.com",
+		"url": "sindresorhus.com"
+	},
+	"publishConfig": {
+		"access": "public"
+	},
+	"engines": {
+		"node": ">=4"
+	},
+	"scripts": {
+		"test": "xo && ava"
+	},
+	"files": [
+		"index.js"
+	],
+	"keywords": [
+		"df",
+		"dfkp",
+		"df-kp",
+		"disk",
+		"space",
+		"free",
+		"info",
+		"data",
+		"fs",
+		"filesystem",
+		"file-system",
+		"drive",
+		"mount",
+		"size",
+		"capacity"
+	],
+	"dependencies": {
+		"execa": "^0.8.0"
+	},
+	"devDependencies": {
+		"ava": "*",
+		"xo": "*"
+	}
 }
