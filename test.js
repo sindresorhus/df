@@ -13,12 +13,12 @@ test('df.fs()', async t => {
 	const dataFs = await m.fs(data[0].filesystem);
 	t.true(dataFs.filesystem.length > 0);
 	t.is(dataFs.mountpoint[0], '/');
-	await t.throws(m.fs('foobar123'), /The specified filesystem/);
+	await t.throwsAsync(() => m.fs('foobar123'), /The specified filesystem/);
 });
 
 test('df.file()', async t => {
 	const data = await m.file(__dirname);
 	t.true(data.filesystem.length > 0);
 	t.is(data.mountpoint[0], '/');
-	await t.throws(m.file('foobar123'), /The specified file/);
+	await t.throwsAsync(() => m.file('foobar123'), /The specified file/);
 });
