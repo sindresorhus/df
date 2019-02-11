@@ -1,6 +1,6 @@
 # df [![Build Status](https://travis-ci.org/sindresorhus/df.svg?branch=master)](https://travis-ci.org/sindresorhus/df)
 
-> Get free disk space info from [`df -kP`](http://en.wikipedia.org/wiki/Df_\(Unix\))
+> Get free disk space info from [`df -kP`](https://en.wikipedia.org/wiki/Df_\(Unix\))
 
 Works on any Unix-based system like macOS and Linux.
 
@@ -22,14 +22,17 @@ const df = require('@sindresorhus/df');
 (async () => {
 	console.log(await df());
 	/*
-	[{
-		filesystem: '/dev/disk1',
-		size: 499046809600,
-		used: 443222245376,
-		available: 55562420224,
-		capacity: 0.89,
-		mountpoint: '/'
-	}, …]
+	[
+		{
+			filesystem: '/dev/disk1',
+			size: 499046809600,
+			used: 443222245376,
+			available: 55562420224,
+			capacity: 0.89,
+			mountpoint: '/'
+		},
+		…
+	]
 	*/
 
 	console.log(await df.fs('/dev/disk1'));
@@ -55,7 +58,7 @@ const df = require('@sindresorhus/df');
 
 ### df()
 
-Returns a `Promise<Array>` with a list of filesystems with space info.
+Returns a `Promise<Object[]>` with a list of filesystems with space info.
 
 ### df.fs(filesystem)
 
