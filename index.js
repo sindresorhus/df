@@ -41,12 +41,12 @@ df.file = file => {
 
 	return run(['-kP', file])
 		.then(data => data[0])
-		.catch(err => {
-			if (/No such file or directory/.test(err.message)) {
-				err = new Error(`The specified file \`${file}\` doesn't exist`);
+		.catch(error => {
+			if (/No such file or directory/.test(error.message)) {
+				error = new Error(`The specified file \`${file}\` doesn't exist`);
 			}
 
-			throw err;
+			throw error;
 		});
 };
 
