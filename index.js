@@ -1,11 +1,42 @@
 'use strict';
 const execa = require('execa');
 
-const run = async args => {
-	const {stdout} = await execa('df', args);
+const getColumnIndices = async header => {
+	const regex = /(\S+\s+)/g;
+	const indices = [];
+	let i = 0;
+	let spaceToNext = 0;
+	let match;
 
-	return stdout.trim().split('\n').slice(1).map(line => {
-		const cl = line.split(/\s+(?=[\d/])/);
+	while ((match = regex.exec(header)) !== null) {
+		let length;
+
+		if (i === 0) {
+			length = match[0].length;
+		} else {
+			length = match[0].trim().length;
+		}
+
+		indices.push(length + spaceToNext);
+		spaceToNext = match[0].length - length;
+		i++;
+	}
+
+	indices[i - 1] = header.length;
+
+	return indices;
+};
+
+const parseOutput = async output => {
+	const lines = output.trim().split('\n');
+	const indices = await getColumnIndices(lines[0]);
+
+	return lines.slice(1).map(line => {
+		const cl = indices.map(index => {
+			const column = line.substring(0, index);
+			line = line.substring(index);
+			return column.trim();
+		});
 
 		return {
 			filesystem: cl[0],
@@ -16,6 +47,12 @@ const run = async args => {
 			mountpoint: cl[5]
 		};
 	});
+};
+
+const run = async args => {
+	const {stdout} = await execa('df', args);
+
+	return parseOutput(stdout);
 };
 
 const df = async () => run(['-kP']);
@@ -55,4 +92,4 @@ df.file = async file => {
 	return data[0];
 };
 
-module.exports = df;
+module.exports = {df, parseOutput};
