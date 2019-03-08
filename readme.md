@@ -58,7 +58,7 @@ const df = require('@sindresorhus/df');
 
 ### df()
 
-Returns a `Promise<Object[]>` with a list of filesystems with space info.
+Returns a `Promise<Object[]>` with a list of space info objects for each filesystem.
 
 ### df.fs(filesystem)
 
@@ -75,6 +75,8 @@ Returns a `Promise<Object>` with the space info for the specified filesystem.
 
 Type: `string`
 
+Path to a filesystem device file. Example: `'/dev/disk1'`.
+
 ### df.file(file)
 
 Returns a `Promise<Object>` with the space info for the filesystem the supplied file is part of.
@@ -83,6 +85,7 @@ Returns a `Promise<Object>` with the space info for the filesystem the supplied 
 
 Type: `string`
 
+The path to a file on the filesystem to get the space info for.
 
 ## License
 
