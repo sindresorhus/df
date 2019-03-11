@@ -62,9 +62,9 @@ Returns a `Promise<Object[]>` with a list of space info objects for each filesys
 
 ### df.fs(filesystem)
 
-Returns a `Promise<Object>` with the space info for the specified filesystem.
+Returns a `Promise<Object>` with the space info for the given filesystem.
 
-- `filesystem` - The name of the filesystem.
+- `filesystem` - Name of the filesystem.
 - `size` - Total size in bytes.
 - `used` - Used size in bytes.
 - `available` - Available size in bytes.
@@ -79,13 +79,14 @@ Path to a filesystem device file. Example: `'/dev/disk1'`.
 
 ### df.file(file)
 
-Returns a `Promise<Object>` with the space info for the filesystem the supplied file is part of.
+Returns a `Promise<Object>` with the space info for the filesystem the given file is part of.
 
 #### file
 
 Type: `string`
 
-The path to a file on the filesystem to get the space info for.
+Path to a file on the filesystem to get the space info for.
+
 
 ## License
 
