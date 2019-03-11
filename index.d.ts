@@ -1,6 +1,6 @@
 export interface SpaceInfo {
 	/**
-	 * The name of the filesystem.
+	 * Name of the filesystem.
 	 */
 	readonly filesystem: string;
 
@@ -40,13 +40,13 @@ declare const df: {
 
 	/**
 	 * @param filesystem - Path to a filesystem device file. Example: `'/dev/disk1'`.
-	 * @returns The space info for the specified filesystem.
+	 * @returns Space info for the given filesystem.
 	 */
 	fs(filesystem: string): Promise<SpaceInfo>;
 
 	/**
-	 * @param file - The path to a file on the filesystem to get the space info for.
-	 * @returns The space info for the filesystem the supplied file is part of.
+	 * @param file - Path to a file on the filesystem to get the space info for.
+	 * @returns Space info for the filesystem the given file is part of.
 	 */
 	file(file: string): Promise<SpaceInfo>;
 };
