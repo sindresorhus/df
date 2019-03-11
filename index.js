@@ -56,3 +56,4 @@ df.file = async file => {
 };
 
 module.exports = df;
+module.exports.default = df;
