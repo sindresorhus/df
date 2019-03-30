@@ -56,4 +56,5 @@ df.file = async file => {
 };
 
 module.exports = df;
+// TODO: remove this in the next major version
 module.exports.default = df;
