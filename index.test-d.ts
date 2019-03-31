@@ -1,5 +1,6 @@
-import {expectType} from 'tsd-check';
-import df, {SpaceInfo} from '.';
+import {expectType} from 'tsd';
+import df = require('.')
+import {SpaceInfo} from '.';
 
 expectType<Promise<SpaceInfo[]>>(df());
 expectType<Promise<SpaceInfo>>(df.fs('/dev/disk1'));
