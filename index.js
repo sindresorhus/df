@@ -92,4 +92,6 @@ df.file = async file => {
 	return data[0];
 };
 
-module.exports = {df, parseOutput};
+module.exports = df;
+// TODO: remove this in the next major version
+module.exports.default = df;
