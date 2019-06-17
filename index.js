@@ -1,40 +1,34 @@
 'use strict';
 const execa = require('execa');
 
-const getColumnIndices = async header => {
-	const regex = /(\S+\s+)/g;
-	const indices = [];
-	let i = 0;
-	let spaceToNext = 0;
+const getColumnBoundaries = async header => {
+	// Regex captures each individual column
+	// ^\S+\s+       -> First column
+	// \s*\S+\s*\S+$ -> Last column (combined)
+	// \s*\S+        -> Regular columns
+	const regex = /^\S+\s+|\s*\S+\s*\S+$|\s*\S+/g;
+	const boundaries = [];
 	let match;
 
-	while ((match = regex.exec(header)) !== null) {
-		let length;
-
-		if (i === 0) {
-			length = match[0].length;
-		} else {
-			length = match[0].trim().length;
-		}
-
-		indices.push(length + spaceToNext);
-		spaceToNext = match[0].length - length;
-		i++;
+	while ((match = regex.exec(header))) {
+		boundaries.push(match[0].length);
 	}
 
-	indices[i - 1] = header.length;
+	// Extend last column boundary
+	boundaries[boundaries.length - 1] = -1;
 
-	return indices;
+	return boundaries;
 };
 
 const parseOutput = async output => {
 	const lines = output.trim().split('\n');
-	const indices = await getColumnIndices(lines[0]);
+	const boundaries = await getColumnBoundaries(lines[0]);
 
 	return lines.slice(1).map(line => {
-		const cl = indices.map(index => {
-			const column = line.substring(0, index);
-			line = line.substring(index);
+		const cl = boundaries.map(boundary => {
+			// Handle extra-long last column
+			const column = boundary > 0 ? line.substring(0, boundary) : line;
+			line = line.substring(boundary);
 			return column.trim();
 		});
 
@@ -95,3 +89,7 @@ df.file = async file => {
 module.exports = df;
 // TODO: remove this in the next major version
 module.exports.default = df;
+
+if (process.env.NODE_ENV === 'test') {
+	module.exports._parseOutput = parseOutput;
+}

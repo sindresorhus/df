@@ -1,5 +1,5 @@
 import test from 'ava';
-import {df, parseOutput} from '.';
+import df from '.';
 
 test('df()', async t => {
 	const data = await df();
@@ -28,7 +28,7 @@ test('df.file()', async t => {
 });
 
 test('parse long output', async t => {
-	const data = await parseOutput(`
+	const data = await df._parseOutput(`
 Filesystem                           1024-blocks      Used Available Capacity Mounted on
 /dev/sda0123456789012345678901234567   243617788 137765660 105852128      57% /media/foobarbazfoobarbazfoobarbazfoobarbaz
 	`);
@@ -42,7 +42,7 @@ Filesystem                           1024-blocks      Used Available Capacity Mo
 });
 
 test('parse output with spaces', async t => {
-	const data = await parseOutput(`
+	const data = await df._parseOutput(`
 Filesystem                           1024-blocks      Used Available Capacity Mounted on
 /dev/sda1 2 3 4 5 999                  243617788 137765660 105852128      57% /media/foo1 2 3 4 5 999
 	`);
