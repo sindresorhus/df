@@ -26,3 +26,45 @@ test('df.file()', async t => {
 
 	await t.throwsAsync(df.file('foobar123'), /The specified file/);
 });
+
+test('parse long output', async t => {
+	const data = await df._parseOutput(`
+Filesystem                           1024-blocks      Used Available Capacity Mounted on
+/dev/sda0123456789012345678901234567   243617788 137765660 105852128      57% /media/foobarbazfoobarbazfoobarbazfoobarbaz
+	`);
+
+	t.is(data[0].filesystem, '/dev/sda0123456789012345678901234567');
+	t.is(data[0].size, 249464614912);
+	t.is(data[0].used, 141072035840);
+	t.is(data[0].available, 108392579072);
+	t.is(data[0].capacity, 0.57);
+	t.is(data[0].mountpoint, '/media/foobarbazfoobarbazfoobarbazfoobarbaz');
+});
+
+test('parse output with spaces', async t => {
+	const data = await df._parseOutput(`
+Filesystem                           1024-blocks      Used Available Capacity Mounted on
+/dev/sda1 2 3 4 5 999                  243617788 137765660 105852128      57% /media/foo1 2 3 4 5 999
+	`);
+
+	t.is(data[0].filesystem, '/dev/sda1 2 3 4 5 999');
+	t.is(data[0].size, 249464614912);
+	t.is(data[0].used, 141072035840);
+	t.is(data[0].available, 108392579072);
+	t.is(data[0].capacity, 0.57);
+	t.is(data[0].mountpoint, '/media/foo1 2 3 4 5 999');
+});
+
+test('parse crammed output', async t => {
+	const data = await df._parseOutput(`
+Filesystem                           1024-blocks      Used Available Capacity Mounted on
+/dev/sda1 2 3 4 5 6 7 8 9 0 12345678 24361778812 137765660 105852128 0000057% /media/foo1 2 3 4 5 999
+	`);
+
+	t.is(data[0].filesystem, '/dev/sda1 2 3 4 5 6 7 8 9 0 12345678');
+	t.is(data[0].size, 24946461503488);
+	t.is(data[0].used, 141072035840);
+	t.is(data[0].available, 108392579072);
+	t.is(data[0].capacity, 0.57);
+	t.is(data[0].mountpoint, '/media/foo1 2 3 4 5 999');
+});

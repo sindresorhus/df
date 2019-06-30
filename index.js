@@ -1,11 +1,36 @@
 'use strict';
 const execa = require('execa');
 
-const run = async args => {
-	const {stdout} = await execa('df', args);
+const getColumnBoundaries = async header => {
+	// Regex captures each individual column
+	// ^\S+\s+       -> First column
+	// \s*\S+\s*\S+$ -> Last column (combined)
+	// \s*\S+        -> Regular columns
+	const regex = /^\S+\s+|\s*\S+\s*\S+$|\s*\S+/g;
+	const boundaries = [];
+	let match;
 
-	return stdout.trim().split('\n').slice(1).map(line => {
-		const cl = line.split(/\s+(?=[\d/])/);
+	while ((match = regex.exec(header))) {
+		boundaries.push(match[0].length);
+	}
+
+	// Extend last column boundary
+	boundaries[boundaries.length - 1] = -1;
+
+	return boundaries;
+};
+
+const parseOutput = async output => {
+	const lines = output.trim().split('\n');
+	const boundaries = await getColumnBoundaries(lines[0]);
+
+	return lines.slice(1).map(line => {
+		const cl = boundaries.map(boundary => {
+			// Handle extra-long last column
+			const column = boundary > 0 ? line.substring(0, boundary) : line;
+			line = line.substring(boundary);
+			return column.trim();
+		});
 
 		return {
 			filesystem: cl[0],
@@ -16,6 +41,12 @@ const run = async args => {
 			mountpoint: cl[5]
 		};
 	});
+};
+
+const run = async args => {
+	const {stdout} = await execa('df', args);
+
+	return parseOutput(stdout);
 };
 
 const df = async () => run(['-kP']);
@@ -58,3 +89,7 @@ df.file = async file => {
 module.exports = df;
 // TODO: remove this in the next major version
 module.exports.default = df;
+
+if (process.env.NODE_ENV === 'test') {
+	module.exports._parseOutput = parseOutput;
+}
