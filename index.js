@@ -27,8 +27,8 @@ const parseOutput = async output => {
 	return lines.slice(1).map(line => {
 		const cl = boundaries.map(boundary => {
 			// Handle extra-long last column
-			const column = boundary > 0 ? line.substring(0, boundary) : line;
-			line = line.substring(boundary);
+			const column = boundary > 0 ? line.slice(0, boundary) : line;
+			line = line.slice(boundary);
 			return column.trim();
 		});
 
@@ -45,7 +45,6 @@ const parseOutput = async output => {
 
 const run = async args => {
 	const {stdout} = await execa('df', args);
-
 	return parseOutput(stdout);
 };
 
@@ -76,7 +75,7 @@ df.file = async file => {
 	try {
 		data = await run(['-kP', file]);
 	} catch (error) {
-		if (/No such file or directory/.test(error.message)) {
+		if (/No such file or directory/.test(error.stderr)) {
 			throw new Error(`The specified file \`${file}\` doesn't exist`);
 		}
 

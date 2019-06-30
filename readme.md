@@ -86,8 +86,3 @@ Returns a `Promise<Object>` with the space info for the filesystem the given fil
 Type: `string`
 
 Path to a file on the filesystem to get the space info for.
-
-
-## License
-
-MIT © [Sindre Sorhus](https://sindresorhus.com)
