@@ -3,10 +3,8 @@ const execa = require('execa');
 
 const getColumnBoundaries = async header => {
 	// Regex captures each individual column
-	// ^\S+\s+       -> First column
-	// \s*\S+\s*\S+$ -> Last column (combined)
-	// \s*\S+        -> Regular columns
-	const regex = /^\S+\s+|\s*\S+\s*\S+$|\s*\S+/g;
+	const regex = /^Filesystem\s+|Type\s+|1024-blocks|\s+Used|\s+Available|\s+Capacity|\s+Mounted on\s*$/g;
+
 	const boundaries = [];
 	let match;
 
@@ -34,11 +32,12 @@ const parseOutput = async output => {
 
 		return {
 			filesystem: cl[0],
-			size: parseInt(cl[1], 10) * 1024,
-			used: parseInt(cl[2], 10) * 1024,
-			available: parseInt(cl[3], 10) * 1024,
-			capacity: parseInt(cl[4], 10) / 100,
-			mountpoint: cl[5]
+			type: cl[1],
+			size: parseInt(cl[2], 10) * 1024,
+			used: parseInt(cl[3], 10) * 1024,
+			available: parseInt(cl[4], 10) * 1024,
+			capacity: parseInt(cl[5], 10) / 100,
+			mountpoint: cl[6]
 		};
 	});
 };
@@ -48,14 +47,14 @@ const run = async args => {
 	return parseOutput(stdout);
 };
 
-const df = async () => run(['-kP']);
+const df = async () => run(['-kPT']);
 
 df.fs = async name => {
 	if (typeof name !== 'string') {
 		throw new TypeError('The `name` parameter required');
 	}
 
-	const data = await run(['-kP']);
+	const data = await run(['-kPT']);
 
 	for (const item of data) {
 		if (item.filesystem === name) {
@@ -73,7 +72,7 @@ df.file = async file => {
 
 	let data;
 	try {
-		data = await run(['-kP', file]);
+		data = await run(['-kPT', file]);
 	} catch (error) {
 		if (/No such file or directory/.test(error.stderr)) {
 			throw new Error(`The specified file \`${file}\` doesn't exist`);
