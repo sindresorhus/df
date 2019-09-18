@@ -85,8 +85,6 @@ df.file = async file => {
 };
 
 module.exports = df;
-// TODO: remove this in the next major version
-module.exports.default = df;
 
 if (process.env.NODE_ENV === 'test') {
 	module.exports._parseOutput = parseOutput;
