@@ -6,6 +6,11 @@ declare namespace df {
 		readonly filesystem: string;
 
 		/**
+		 * Type of the filesystem.
+		 */
+		readonly type: string;
+
+		/**
 		 * Total size in bytes.
 		 */
 		readonly size: number;

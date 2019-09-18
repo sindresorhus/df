@@ -25,6 +25,7 @@ const df = require('@sindresorhus/df');
 	[
 		{
 			filesystem: '/dev/disk1',
+			type: 'ext4',
 			size: 499046809600,
 			used: 443222245376,
 			available: 55562420224,
@@ -65,6 +66,7 @@ Returns a `Promise<Object[]>` with a list of space info objects for each filesys
 Returns a `Promise<Object>` with the space info for the given filesystem path.
 
 - `filesystem` - Name of the filesystem.
+- `type` - Type of the filesystem.
 - `size` - Total size in bytes.
 - `used` - Used size in bytes.
 - `available` - Available size in bytes.
