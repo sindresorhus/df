@@ -1,4 +1,4 @@
-# df [![Build Status](https://travis-ci.org/sindresorhus/df.svg?branch=master)](https://travis-ci.org/sindresorhus/df)
+# df
 
 > Get free disk space info from [`df -kP`](https://en.wikipedia.org/wiki/Df_\(Unix\))
 
