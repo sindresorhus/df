@@ -1,46 +1,26 @@
 'use strict';
 const execa = require('execa');
+const parseColumns = require('parse-columns');
 
-const getColumnBoundaries = async header => {
-	// Regex captures each individual column
-	const regex = /^Filesystem\s+|Type\s+|1024-blocks|\s+Used|\s+Available|\s+Capacity|\s+Mounted on\s*$/g;
+const identity = v => v;
+const parseBlocks = str => parseInt(str, 10) * 1024;
 
-	const boundaries = [];
-	let match;
-
-	while ((match = regex.exec(header))) {
-		boundaries.push(match[0].length);
-	}
-
-	// Extend last column boundary
-	boundaries[boundaries.length - 1] = -1;
-
-	return boundaries;
+const COLUMNS = {
+	filesystem: identity,
+	type: identity,
+	size: parseBlocks,
+	used: parseBlocks,
+	available: parseBlocks,
+	capacity: str => parseInt(str, 10) / 100,
+	mountpoint: identity
 };
 
-const parseOutput = async output => {
-	const lines = output.trim().split('\n');
-	const boundaries = await getColumnBoundaries(lines[0]);
-
-	return lines.slice(1).map(line => {
-		const cl = boundaries.map(boundary => {
-			// Handle extra-long last column
-			const column = boundary > 0 ? line.slice(0, boundary) : line;
-			line = line.slice(boundary);
-			return column.trim();
-		});
-
-		return {
-			filesystem: cl[0],
-			type: cl[1],
-			size: parseInt(cl[2], 10) * 1024,
-			used: parseInt(cl[3], 10) * 1024,
-			available: parseInt(cl[4], 10) * 1024,
-			capacity: parseInt(cl[5], 10) / 100,
-			mountpoint: cl[6]
-		};
-	});
+const parseColumnsOptions = {
+	headers: Object.keys(COLUMNS),
+	transform: (element, header) => COLUMNS[header](element)
 };
+
+const parseOutput = output => parseColumns(output, parseColumnsOptions);
 
 const run = async args => {
 	const {stdout} = await execa('df', args);

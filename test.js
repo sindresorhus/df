@@ -74,3 +74,17 @@ Filesystem                           Type 1024-blocks      Used Available Capaci
 	t.is(data[0].capacity, 0.57);
 	t.is(data[0].mountpoint, '/media/foo1 2 3 4 5 999');
 });
+
+test('#13', async t => {
+	const data = await df._parseOutput(`
+	Filesystem                 Type  1024-blocks  Used    Available Capacity Mounted on
+	xx.xxx.xxx.xx:/xxxxxxxxxxx nfs  198640150528 43008 198640107520       1% /run/xo-server/mounts/cbb36e4c-3353-4126-8588-18ba25697403
+	`);
+
+	t.is(data[0].filesystem, 'xx.xxx.xxx.xx:/xxxxxxxxxxx');
+	t.is(data[0].size, 203407514140672);
+	t.is(data[0].used, 44040192);
+	t.is(data[0].available, 203407470100480);
+	t.is(data[0].capacity, 0.01);
+	t.is(data[0].mountpoint, '/run/xo-server/mounts/cbb36e4c-3353-4126-8588-18ba25697403');
+});
