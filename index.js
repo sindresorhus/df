@@ -1,9 +1,13 @@
-'use strict';
-const execa = require('execa');
+import process from 'node:process';
+import execa from 'execa';
 
 const getColumnBoundaries = async header => {
 	// Regex captures each individual column
-	const regex = /^Filesystem\s+|Type\s+|1024-blocks|\s+Used|\s+Available|\s+Capacity|\s+Mounted on\s*$/g;
+	let regex = /^Filesystem\s+|Type\s+|1024-blocks|\s+Used|\s+Available|\s+Capacity|\s+Mounted on\s*$/g;
+
+	if (process.platform === 'darwin') {
+		regex = /^Filesystem\s+|1024-blocks|\s+Used|\s+Available|\s+Capacity|\s+Mounted on\s*$/g;
+	}
 
 	const boundaries = [];
 	let match;
@@ -30,62 +34,72 @@ const parseOutput = async output => {
 			return column.trim();
 		});
 
+		// https://github.com/sindresorhus/df/issues/15
+		if (process.platform === 'darwin') {
+			cl.splice(1, 0, '');
+		}
+
 		return {
 			filesystem: cl[0],
 			type: cl[1],
-			size: parseInt(cl[2], 10) * 1024,
-			used: parseInt(cl[3], 10) * 1024,
-			available: parseInt(cl[4], 10) * 1024,
-			capacity: parseInt(cl[5], 10) / 100,
-			mountpoint: cl[6]
+			size: Number.parseInt(cl[2], 10) * 1024,
+			used: Number.parseInt(cl[3], 10) * 1024,
+			available: Number.parseInt(cl[4], 10) * 1024,
+			capacity: Number.parseInt(cl[5], 10) / 100,
+			mountpoint: cl[6],
 		};
 	});
 };
 
-const run = async args => {
-	const {stdout} = await execa('df', args);
+const run = async arguments_ => {
+	// https://github.com/sindresorhus/df/issues/15
+	if (process.platform === 'darwin') {
+		arguments_[0] = arguments_[0].replace(/T$/, '');
+	}
+
+	const {stdout} = await execa('df', arguments_);
 	return parseOutput(stdout);
 };
 
-const df = async () => run(['-kPT']);
+export async function diskSpace() {
+	return run(['-kPT']);
+}
 
-df.fs = async name => {
-	if (typeof name !== 'string') {
-		throw new TypeError('The `name` parameter required');
+export async function diskSpaceForFilesystem(pathToDeviceFile) {
+	if (typeof pathToDeviceFile !== 'string') {
+		throw new TypeError('The `pathToDeviceFile` parameter is required');
 	}
 
 	const data = await run(['-kPT']);
 
 	for (const item of data) {
-		if (item.filesystem === name) {
+		if (item.filesystem === pathToDeviceFile) {
 			return item;
 		}
 	}
 
-	throw new Error(`The specified filesystem \`${name}\` doesn't exist`);
-};
+	throw new Error(`The specified filesystem \`${pathToDeviceFile}\` does not exist`);
+}
 
-df.file = async file => {
-	if (typeof file !== 'string') {
-		throw new TypeError('The `file` parameter is required');
+export async function diskSpaceForFilesystemOwningPath(path) {
+	if (typeof path !== 'string') {
+		throw new TypeError('The `path` parameter is required');
 	}
 
 	let data;
 	try {
-		data = await run(['-kPT', file]);
+		data = await run(['-kPT', path]);
 	} catch (error) {
 		if (/No such file or directory/.test(error.stderr)) {
-			throw new Error(`The specified file \`${file}\` doesn't exist`);
+			throw new Error(`The given file/directory at \`${path}\` does not exist`);
 		}
 
 		throw error;
 	}
 
 	return data[0];
-};
-
-module.exports = df;
+}
 
 if (process.env.NODE_ENV === 'test') {
-	module.exports._parseOutput = parseOutput;
+	diskSpace._parseOutput = parseOutput;
 }

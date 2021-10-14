@@ -1,124 +1,110 @@
-declare namespace df {
-	interface SpaceInfo {
-		/**
-		Name of the filesystem.
-		*/
-		readonly filesystem: string;
+export interface SpaceInfo {
+	/**
+	Name of the filesystem.
+	*/
+	readonly filesystem: string;
 
-		/**
-		Type of the filesystem.
-		*/
-		readonly type: string;
+	/**
+	Type of the filesystem.
 
-		/**
-		Total size in bytes.
-		*/
-		readonly size: number;
+	_(Not available on macOS)_
+	*/
+	readonly type: string;
 
-		/**
-		Used size in bytes.
-		*/
-		readonly used: number;
+	/**
+	Total size in bytes.
+	*/
+	readonly size: number;
 
-		/**
-		Available size in bytes.
-		*/
-		readonly available: number;
+	/**
+	Used size in bytes.
+	*/
+	readonly used: number;
 
-		/**
-		Capacity as a float from `0` to `1`.
-		*/
-		readonly capacity: number;
+	/**
+	Available size in bytes.
+	*/
+	readonly available: number;
 
-		/**
-		Disk mount location.
-		*/
-		readonly mountpoint: string;
-	}
+	/**
+	Capacity as a float from `0` to `1`.
+	*/
+	readonly capacity: number;
+
+	/**
+	Disk mount location.
+	*/
+	readonly mountpoint: string;
 }
 
-declare const df: {
-	/**
-	Get free disk space info from [`df -kP`](https://en.wikipedia.org/wiki/Df_\(Unix\)).
+/**
+Get free disk space info from [`df -kP`](https://en.wikipedia.org/wiki/Df_\(Unix\)).
 
-	@returns A list of space info objects for each filesystem.
+@returns A list of space info objects for each filesystem.
 
-	@example
-	```
-	import df = require('@sindresorhus/df');
+@example
+```
+import {diskSpace} from '@sindresorhus/df';
 
-	(async () => {
-		console.log(await df());
-		// [
-		// 	{
-		// 		filesystem: '/dev/disk1',
-		// 		type: 'ext4',
-		// 		size: 499046809600,
-		// 		used: 443222245376,
-		// 		available: 55562420224,
-		// 		capacity: 0.89,
-		// 		mountpoint: '/'
-		// 	},
-		// 	…
-		// ]
-	})();
-	```
-	*/
-	(): Promise<df.SpaceInfo[]>;
+console.log(await diskSpace());
+// [
+// 	{
+// 		filesystem: '/dev/disk1',
+// 		type: 'ext4',
+// 		size: 499046809600,
+// 		used: 443222245376,
+// 		available: 55562420224,
+// 		capacity: 0.89,
+// 		mountpoint: '/'
+// 	},
+// 	…
+// ]
+```
+*/
+export function diskSpace(): Promise<SpaceInfo[]>;
 
-	/**
-	@param path - Path to a filesystem device file. Example: `'/dev/disk1'`.
-	@returns Space info for the given filesystem.
+/**
+Get free disk space info for the given filesystem.
 
-	@example
-	```
-	import df = require('@sindresorhus/df');
+@param pathToDeviceFile - A path to a filesystem device file. Example: `'/dev/disk1'`.
+@returns Space info for the given filesystem.
 
-	(async () => {
-		console.log(await df.fs('/dev/disk1'));
-		// [
-		// 	{
-		// 		filesystem: '/dev/disk1',
-		// 		type: 'ext4',
-		// 		size: 499046809600,
-		// 		used: 443222245376,
-		// 		available: 55562420224,
-		// 		capacity: 0.89,
-		// 		mountpoint: '/'
-		// 	},
-		// 	…
-		// ]
-	})();
-	```
-	*/
-	fs(path: string): Promise<df.SpaceInfo>;
+@example
+```
+import {diskSpaceForFilesystem} from '@sindresorhus/df';
 
-	/**
-	@param path - Path to a file on the filesystem to get the space info for.
-	@returns Space info for the filesystem the given file is part of.
+console.log(await diskSpaceForFilesystem('/dev/disk1'));
+// {
+// 	filesystem: '/dev/disk1',
+// 	type: 'ext4',
+// 	size: 499046809600,
+// 	used: 443222245376,
+// 	available: 55562420224,
+// 	capacity: 0.89,
+// 	mountpoint: '/'
+// }
+```
+*/
+export function diskSpaceForFilesystem(pathToDeviceFile: string): Promise<SpaceInfo>;
 
-	@example
-	```
-	import df = require('@sindresorhus/df');
+/**
+@param path - A path to a file/directory on the filesystem to get the space info for.
+@returns Space info for the filesystem the given path is part of.
 
-	(async () => {
-		console.log(await df.file(__dirname));
-		// [
-		// 	{
-		// 		filesystem: '/dev/disk1',
-		// 		type: 'ext4',
-		// 		size: 499046809600,
-		// 		used: 443222245376,
-		// 		available: 55562420224,
-		// 		capacity: 0.89,
-		// 		mountpoint: '/'
-		// 	},
-		// 	…
-		// ]
-	})();
-	```
-	*/
-	file(path: string): Promise<df.SpaceInfo>;
-};
+@example
+```
+import {diskSpaceForFilesystemOwningPath} from '@sindresorhus/df';
 
-export = df;
+console.log(await diskSpaceForFilesystemOwningPath('.'));
+// {
+// 	filesystem: '/dev/disk1',
+// 	type: 'ext4',
+// 	size: 499046809600,
+// 	used: 443222245376,
+// 	available: 55562420224,
+// 	capacity: 0.89,
+// 	mountpoint: '/'
+// }
+```
+*/
+export function diskSpaceForFilesystemOwningPath(path: string): Promise<SpaceInfo>;

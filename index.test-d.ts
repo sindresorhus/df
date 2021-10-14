@@ -1,12 +1,16 @@
 import {expectType} from 'tsd';
-import df = require('.')
-import {SpaceInfo} from '.';
+import {
+	diskSpace,
+	diskSpaceForFilesystem,
+	diskSpaceForFilesystemOwningPath,
+	SpaceInfo,
+} from './index.js';
 
-expectType<Promise<SpaceInfo[]>>(df());
-expectType<Promise<SpaceInfo>>(df.fs('/dev/disk1'));
-expectType<Promise<SpaceInfo>>(df.file('info.txt'));
+expectType<Promise<SpaceInfo[]>>(diskSpace());
+expectType<Promise<SpaceInfo>>(diskSpaceForFilesystem('/dev/disk1'));
+expectType<Promise<SpaceInfo>>(diskSpaceForFilesystemOwningPath('info.txt'));
 
-const spaceInfo = await df.fs('/dev/disk1');
+const spaceInfo = await diskSpaceForFilesystem('/dev/disk1');
 
 expectType<string>(spaceInfo.filesystem);
 expectType<number>(spaceInfo.size);

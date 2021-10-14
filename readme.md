@@ -6,67 +6,66 @@ Works on any Unix-based system like macOS and Linux.
 
 *Created because all the other `df` wrappers are terrible. This one uses simple and explicit parsing. Uses `execFile` rather than `exec`. Ensures better platform portability by using the `-P` flag. Returns sizes in bytes instead of kilobytes and the capacity as a float.*
 
-
 ## Install
 
+```sh
+npm install @sindresorhus/df
 ```
-$ npm install @sindresorhus/df
-```
-
 
 ## Usage
 
 ```js
-const df = require('@sindresorhus/df');
+import {
+	diskSpace,
+	diskSpaceForFilesystem,
+	diskSpaceForFilesystemOwningPath
+} from '@sindresorhus/df';
 
-(async () => {
-	console.log(await df());
-	/*
-	[
-		{
-			filesystem: '/dev/disk1',
-			type: 'ext4',
-			size: 499046809600,
-			used: 443222245376,
-			available: 55562420224,
-			capacity: 0.89,
-			mountpoint: '/'
-		},
-		…
-	]
-	*/
-
-	console.log(await df.fs('/dev/disk1'));
-	/*
+console.log(await diskSpace());
+/*
+[
 	{
 		filesystem: '/dev/disk1',
-		…
-	}
-	*/
+		type: 'ext4',
+		size: 499046809600,
+		used: 443222245376,
+		available: 55562420224,
+		capacity: 0.89,
+		mountpoint: '/'
+	},
+	…
+]
+*/
 
-	console.log(await df.file(__dirname));
-	/*
-	{
-		filesystem: '/dev/disk1',
-		…
-	}
-	*/
-})();
+console.log(await diskSpaceForFilesystem('/dev/disk1'));
+/*
+{
+	filesystem: '/dev/disk1',
+	…
+}
+*/
+
+console.log(await diskSpaceForFilesystemOwningPath('.'));
+/*
+{
+	filesystem: '/dev/disk1',
+	…
+}
+*/
 ```
-
 
 ## API
 
-### df()
+### diskSpace()
 
-Returns a `Promise<Object[]>` with a list of space info objects for each filesystem.
+Returns a `Promise<object[]>` with a list of space info objects for each filesystem.
 
-### df.fs(path)
+### diskSpaceForFilesystem(path)
 
-Returns a `Promise<Object>` with the space info for the given filesystem path.
+Returns a `Promise<object>` with the space info for the given filesystem path.
 
 - `filesystem` - Name of the filesystem.
-- `type` - Type of the filesystem.
+- `type` - Type of the filesystem. *(Not available on macOS)*
 - `size` - Total size in bytes.
 - `used` - Used size in bytes.
 - `available` - Available size in bytes.
@@ -77,14 +76,14 @@ Returns a `Promise<Object>` with the space info for the given filesystem path.
 
 Type: `string`
 
-Path to a [filesystem device file](https://en.wikipedia.org/wiki/Device_file). Example: `'/dev/disk1'`.
+A path to a [filesystem device file](https://en.wikipedia.org/wiki/Device_file). Example: `'/dev/disk1'`.
 
-### df.file(path)
+### diskSpaceForFilesystemOwningPath(path)
 
-Returns a `Promise<Object>` with the space info for the filesystem the given file is part of.
+Returns a `Promise<object>` with the space info for the filesystem the given path is part of.
 
 #### path
 
 Type: `string`
 
-Path to a file on the filesystem to get the space info for.
+A path to a file/directory on the filesystem to get the space info for.
