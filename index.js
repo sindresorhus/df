@@ -1,46 +1,107 @@
+import fs from 'node:fs/promises';
 import process from 'node:process';
 import {execa} from 'execa';
 
-const parseOutput = async output => {
-	const lines = output.trim().split('\n');
+const isDarwin = process.platform === 'darwin';
 
-	const createSpaceInfo = ({filesystem, type = '', size, used, available, capacity, mountpoint}) => ({
-		filesystem: filesystem.trim(),
-		type: type.trim(),
-		size: Number.parseInt(size, 10) * 1024,
-		used: Number.parseInt(used, 10) * 1024,
-		available: Number.parseInt(available, 10) * 1024,
-		capacity: Number.parseInt(capacity, 10) / 100,
-		mountpoint: mountpoint.trim(),
-	});
+const patternWithoutType = /^(?<filesystem>.+?)\s+(?<size>\d+)\s+(?<used>\d+)\s+(?<available>\d+)\s+(?<capacity>\d+)%\s+(?<mountpoint>.+)$/;
+const patternWithType = /^(?<filesystem>.+?)\s+(?<type>\S+)\s+(?<size>\d+)\s+(?<used>\d+)\s+(?<available>\d+)\s+(?<capacity>\d+)%\s+(?<mountpoint>.+)$/;
 
-	return lines.slice(1).map(line => {
-		const darwinPattern = /^(?<filesystem>.+?)\s+(?<size>\d+)\s+(?<used>\d+)\s+(?<available>\d+)\s+(?<capacity>\d+)%\s+(?<mountpoint>.+)$/;
-		const linuxPattern = /^(?<filesystem>.+?)\s+(?<type>\S+)\s+(?<size>\d+)\s+(?<used>\d+)\s+(?<available>\d+)\s+(?<capacity>\d+)%\s+(?<mountpoint>.+)$/;
+let cachedMountTypes;
+let cachedAt = 0;
 
-		const pattern = process.platform === 'darwin' ? darwinPattern : linuxPattern;
+const getMountTypes = async () => {
+	const now = Date.now();
+	if (cachedMountTypes && now - cachedAt < 2000) {
+		return cachedMountTypes;
+	}
+
+	try {
+		const {stdout} = await execa('mount', {timeout: 3000});
+		const map = new Map();
+
+		for (const line of stdout.trim().split('\n')) {
+			const match = line.match(/^(?<device>.+?)\s+on\s+(?<mountpoint>.+?)\s+\((?<type>[^,]+)(?:,.*?)?\)$/);
+			if (!match) {
+				continue;
+			}
+
+			const {device, mountpoint, type} = match.groups;
+			map.set(device.trim(), type.trim());
+			map.set(mountpoint.trim(), type.trim());
+		}
+
+		cachedMountTypes = map;
+		cachedAt = now;
+		return map;
+	} catch {
+		return new Map();
+	}
+};
+
+const parseOutput = (output, mountTypes) => {
+	const [header, ...rows] = output.trim().split('\n');
+	const hasType = /\b(type|fstype)\b/i.test(header);
+	const pattern = hasType ? patternWithType : patternWithoutType;
+
+	return rows.map(line => {
 		const match = line.match(pattern);
-
 		if (!match) {
 			throw new Error(`Unable to parse df output line: ${line}`);
 		}
 
-		return createSpaceInfo(match.groups);
+		const {groups} = match;
+
+		const info = {
+			filesystem: groups.filesystem.trim(),
+			type: (groups.type ?? '').trim(),
+			size: Number.parseInt(groups.size, 10) * 1024,
+			used: Number.parseInt(groups.used, 10) * 1024,
+			available: Number.parseInt(groups.available, 10) * 1024,
+			capacity: Number.parseInt(groups.capacity, 10) / 100,
+			mountpoint: groups.mountpoint.trim(),
+		};
+
+		if (!hasType && mountTypes) {
+			info.type = mountTypes.get(info.filesystem) ?? mountTypes.get(info.mountpoint) ?? '';
+		}
+
+		return info;
 	});
 };
 
-const run = async arguments_ => {
-	// https://github.com/sindresorhus/df/issues/15
-	if (process.platform === 'darwin') {
-		arguments_[0] = arguments_[0].replace(/T$/, '');
+let gnuOutputSupported; // `undefined | true | false``
+
+const hasGnuOutput = async () => {
+	if (gnuOutputSupported !== undefined) {
+		return gnuOutputSupported;
 	}
 
-	const {stdout} = await execa('df', arguments_);
-	return parseOutput(stdout);
+	try {
+		await execa('df', ['--output=source', '-P'], {timeout: 2000});
+		gnuOutputSupported = true;
+	} catch {
+		gnuOutputSupported = false;
+	}
+
+	return gnuOutputSupported;
+};
+
+const run = async (extraArguments = []) => {
+	const useGnu = !isDarwin && await hasGnuOutput();
+
+	const base = useGnu
+		? ['-P', '--output=source,fstype,size,used,avail,pcent,target']
+		: (isDarwin ? ['-kP'] : ['-kPT']);
+
+	const arguments_ = [...base, ...extraArguments];
+	const {stdout} = await execa('df', arguments_, {timeout: 5000});
+	const mountTypes = isDarwin ? await getMountTypes() : undefined;
+	return parseOutput(stdout, mountTypes);
 };
 
 export async function diskSpace() {
-	return run(['-kPT']);
+	return run();
 }
 
 export async function diskSpaceForFilesystem(pathToDeviceFile) {
@@ -48,7 +109,7 @@ export async function diskSpaceForFilesystem(pathToDeviceFile) {
 		throw new TypeError('The `pathToDeviceFile` parameter is required');
 	}
 
-	const data = await run(['-kPT']);
+	const data = await run();
 
 	for (const item of data) {
 		if (item.filesystem === pathToDeviceFile) {
@@ -64,20 +125,17 @@ export async function diskSpaceForFilesystemOwningPath(path) {
 		throw new TypeError('The `path` parameter is required');
 	}
 
-	let data;
 	try {
-		data = await run(['-kPT', path]);
-	} catch (error) {
-		if (/No such file or directory/.test(error.stderr)) {
-			throw new Error(`The given file/directory at \`${path}\` does not exist`);
-		}
-
-		throw error;
+		await fs.stat(path);
+	} catch {
+		throw new Error(`The given file/directory at \`${path}\` does not exist`);
 	}
 
-	return data[0];
+	const [row] = await run([path]);
+	return row;
 }
 
 if (process.env.NODE_ENV === 'test') {
 	diskSpace._parseOutput = parseOutput;
+	diskSpace._getMountTypes = getMountTypes;
 }

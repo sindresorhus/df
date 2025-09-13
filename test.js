@@ -1,5 +1,6 @@
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
+import process from 'node:process';
 import test from 'ava';
 import {
 	diskSpace,
@@ -101,6 +102,67 @@ server:/share 2000000 1900000 100000 95% /mnt/nfs`;
 	t.is(data[2].capacity, 0.95);
 });
 
+test('header detection: Linux output with Type column', async t => {
+	const mockDfOutput = `Filesystem                           Type 1024-blocks      Used Available Capacity Mounted on
+/dev/sda1                           ext4 1000000 500000 500000 50% /`;
+
+	const data = await diskSpace._parseOutput(mockDfOutput);
+
+	t.is(data[0].filesystem, '/dev/sda1');
+	t.is(data[0].type, 'ext4');
+	t.is(data[0].capacity, 0.5);
+});
+
+test('header detection: Darwin/BSD output without Type column', async t => {
+	const mockDfOutput = `Filesystem     1024-blocks  Used Available Capacity Mounted on
+/dev/disk1 1000000 500000 500000 50% /`;
+
+	const data = await diskSpace._parseOutput(mockDfOutput);
+
+	t.is(data[0].filesystem, '/dev/disk1');
+	t.is(data[0].type, '');
+	t.is(data[0].capacity, 0.5);
+});
+
+test('busybox-style header with 1K-blocks and Use%', async t => {
+	const mockDfOutput = `Filesystem     1K-blocks  Used Available Use% Mounted on
+/dev/sda1 1000000 500000 500000 50% /`;
+
+	const data = await diskSpace._parseOutput(mockDfOutput);
+
+	t.is(data[0].filesystem, '/dev/sda1');
+	t.is(data[0].capacity, 0.5);
+});
+
+test('very long device and mountpoint with Type column', async t => {
+	const mockDfOutput = `Filesystem                           Type 1024-blocks      Used    Available Capacity Mounted on
+server0123456789:/very/long/path/with/1234567890 ext4 198640150528 43008 198640107520 1% /mnt/very long mountpoint 1234567890`;
+
+	const data = await diskSpace._parseOutput(mockDfOutput);
+
+	t.is(data[0].filesystem, 'server0123456789:/very/long/path/with/1234567890');
+	t.is(data[0].type, 'ext4');
+	t.is(data[0].size, 198_640_150_528 * 1024);
+	t.is(data[0].available, 198_640_107_520 * 1024);
+	t.is(data[0].capacity, 0.01);
+	t.is(data[0].mountpoint, '/mnt/very long mountpoint 1234567890');
+});
+
+test('GNU --output header variant parses', async t => {
+	const mockDfOutput = `source fstype size used avail pcent target
+/dev/sda1 ext4 1000000 500000 500000 50% /`;
+
+	const data = await diskSpace._parseOutput(mockDfOutput);
+
+	t.is(data[0].filesystem, '/dev/sda1');
+	t.is(data[0].type, 'ext4');
+	t.is(data[0].size, 1_000_000 * 1024);
+	t.is(data[0].used, 500_000 * 1024);
+	t.is(data[0].available, 500_000 * 1024);
+	t.is(data[0].capacity, 0.5);
+	t.is(data[0].mountpoint, '/');
+});
+
 test('parse edge case capacities', async t => {
 	const mockDfOutput = `Filesystem     1024-blocks  Used Available Capacity Mounted on
 /dev/empty 1000 1000 0 100% /full
@@ -132,6 +194,78 @@ invalid line without proper structure`;
 		{message: /Unable to parse df output line/},
 	);
 });
+
+if (process.platform === 'darwin') {
+	test('filesystem type should be populated on macOS', async t => {
+		const data = await diskSpace();
+
+		const rootEntry = data.find(item => item.mountpoint === '/');
+		t.truthy(rootEntry, 'Should find root filesystem');
+
+		t.truthy(rootEntry.type, 'Root filesystem should have a type');
+		t.not(rootEntry.type, '', 'Type should not be empty string');
+
+		// Root is typically APFS on modern macOS
+		t.regex(rootEntry.type, /apfs|hfs/i, 'Root should be APFS or HFS');
+	});
+
+	test('handles mount command failure gracefully', async t => {
+		// Mock getMountTypes to return empty Map (simulating mount command failure)
+		const originalGetMountTypes = diskSpace._getMountTypes;
+		diskSpace._getMountTypes = async () => new Map();
+
+		const mockDfOutput = `Filesystem     1024-blocks  Used Available Capacity Mounted on
+/dev/disk1 1000000 500000 500000 50% /`;
+
+		const data = await diskSpace._parseOutput(mockDfOutput, new Map());
+
+		t.is(data[0].type, '', 'Should have empty type when mount data unavailable');
+		t.is(data[0].filesystem, '/dev/disk1');
+		t.is(data[0].mountpoint, '/');
+
+		// Restore original function
+		diskSpace._getMountTypes = originalGetMountTypes;
+	});
+
+	test('mount data parsing handles various formats', async t => {
+		const mountTypes = await diskSpace._getMountTypes();
+
+		// Should parse real mount data without errors
+		t.true(mountTypes instanceof Map);
+
+		// Should have some common mount points
+		const rootType = mountTypes.get('/');
+		if (rootType) {
+			t.is(typeof rootType, 'string');
+			t.true(rootType.length > 0);
+		}
+	});
+
+	test('mount data matching works with partial matches', async t => {
+		// Create mock mount types with specific mappings
+		const mockMountTypes = new Map([
+			['/dev/disk1', 'apfs'],
+			['/System/Volumes/Data', 'apfs'],
+			['/mnt/test', 'nfs'],
+		]);
+
+		const mockDfOutput = `Filesystem     1024-blocks  Used Available Capacity Mounted on
+/dev/disk1 1000000 500000 500000 50% /
+unknown-device 2000000 1000000 1000000 50% /System/Volumes/Data
+/dev/disk2 3000000 1500000 1500000 50% /mnt/unknown`;
+
+		const data = await diskSpace._parseOutput(mockDfOutput, mockMountTypes);
+
+		// Should match by device name
+		t.is(data[0].type, 'apfs', 'Should match by filesystem device');
+
+		// Should match by mountpoint when device is unknown
+		t.is(data[1].type, 'apfs', 'Should match by mountpoint');
+
+		// Should have empty type when no match found
+		t.is(data[2].type, '', 'Should have empty type when no match found');
+	});
+}
 
 // Disabled because of https://github.com/sindresorhus/df/issues/15
 

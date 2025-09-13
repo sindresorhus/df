@@ -65,7 +65,7 @@ Returns a `Promise<object[]>` with a list of space info objects for each filesys
 Returns a `Promise<object>` with the space info for the given filesystem path.
 
 - `filesystem` - Name of the filesystem.
-- `type` - Type of the filesystem. *(Not available on macOS)*
+- `type` - Type of the filesystem.
 - `size` - Total size in bytes.
 - `used` - Used size in bytes.
 - `available` - Available size in bytes.

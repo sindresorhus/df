@@ -6,8 +6,6 @@ export type SpaceInfo = {
 
 	/**
 	Type of the filesystem.
-
-	_(Not available on macOS)_
 	*/
 	readonly type: string;
 
