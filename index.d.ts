@@ -1,4 +1,4 @@
-export interface SpaceInfo {
+export type SpaceInfo = {
 	/**
 	Name of the filesystem.
 	*/
@@ -35,7 +35,7 @@ export interface SpaceInfo {
 	Disk mount location.
 	*/
 	readonly mountpoint: string;
-}
+};
 
 /**
 Get free disk space info from [`df -kP`](https://en.wikipedia.org/wiki/Df_\(Unix\)).

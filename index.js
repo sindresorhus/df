@@ -1,5 +1,5 @@
 import process from 'node:process';
-import execa from 'execa';
+import {execa} from 'execa';
 
 const getColumnBoundaries = async header => {
 	// Regex captures each individual column
