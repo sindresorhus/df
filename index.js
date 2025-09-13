@@ -1,53 +1,31 @@
 import process from 'node:process';
 import {execa} from 'execa';
 
-const getColumnBoundaries = async header => {
-	// Regex captures each individual column
-	let regex = /^Filesystem\s+|Type\s+|1024-blocks|\s+Used|\s+Available|\s+Capacity|\s+Mounted on\s*$/g;
-
-	if (process.platform === 'darwin') {
-		regex = /^Filesystem\s+|1024-blocks|\s+Used|\s+Available|\s+Capacity|\s+Mounted on\s*$/g;
-	}
-
-	const boundaries = [];
-	let match;
-
-	while ((match = regex.exec(header))) {
-		boundaries.push(match[0].length);
-	}
-
-	// Extend last column boundary
-	boundaries[boundaries.length - 1] = -1;
-
-	return boundaries;
-};
-
 const parseOutput = async output => {
 	const lines = output.trim().split('\n');
-	const boundaries = await getColumnBoundaries(lines[0]);
+
+	const createSpaceInfo = ({filesystem, type = '', size, used, available, capacity, mountpoint}) => ({
+		filesystem: filesystem.trim(),
+		type: type.trim(),
+		size: Number.parseInt(size, 10) * 1024,
+		used: Number.parseInt(used, 10) * 1024,
+		available: Number.parseInt(available, 10) * 1024,
+		capacity: Number.parseInt(capacity, 10) / 100,
+		mountpoint: mountpoint.trim(),
+	});
 
 	return lines.slice(1).map(line => {
-		const cl = boundaries.map(boundary => {
-			// Handle extra-long last column
-			const column = boundary > 0 ? line.slice(0, boundary) : line;
-			line = line.slice(boundary);
-			return column.trim();
-		});
+		const darwinPattern = /^(?<filesystem>.+?)\s+(?<size>\d+)\s+(?<used>\d+)\s+(?<available>\d+)\s+(?<capacity>\d+)%\s+(?<mountpoint>.+)$/;
+		const linuxPattern = /^(?<filesystem>.+?)\s+(?<type>\S+)\s+(?<size>\d+)\s+(?<used>\d+)\s+(?<available>\d+)\s+(?<capacity>\d+)%\s+(?<mountpoint>.+)$/;
 
-		// https://github.com/sindresorhus/df/issues/15
-		if (process.platform === 'darwin') {
-			cl.splice(1, 0, '');
+		const pattern = process.platform === 'darwin' ? darwinPattern : linuxPattern;
+		const match = line.match(pattern);
+
+		if (!match) {
+			throw new Error(`Unable to parse df output line: ${line}`);
 		}
 
-		return {
-			filesystem: cl[0],
-			type: cl[1],
-			size: Number.parseInt(cl[2], 10) * 1024,
-			used: Number.parseInt(cl[3], 10) * 1024,
-			available: Number.parseInt(cl[4], 10) * 1024,
-			capacity: Number.parseInt(cl[5], 10) / 100,
-			mountpoint: cl[6],
-		};
+		return createSpaceInfo(match.groups);
 	});
 };
 
